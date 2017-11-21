@@ -202,6 +202,7 @@ Collection        | Iterable | sort() | filter()  | find()   | get()  | create()
 `client.projects` | ✓        | ✓      | ✓         | ✓        | ✓      | ✓        | ✗     | ✗
 `client.services` | ✓        | ✓      | ✓         | ✓        | ✓      | ✗        | ✗     | ✗
 `job.files`       | ✓        | ✓      | ✓         | ✓        | ✓      | ✗        | ✓     | ✓
+`project.charges` | ✓        | ✗      | ✗         | ✗        | ✗      | ✗        | ✗     | ✗
 `project.files`   | ✓        | ✓      | ✓         | ✓        | ✓      | ✗        | ✓     | ✓
 `project.jobs`    | ✓        | ✓      | ✓         | ✓        | ✓      | ✓        | ✗     | ✗
 

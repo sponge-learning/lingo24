@@ -8,7 +8,7 @@ from ..exceptions import APIError, InvalidState, reraise
 from .collections import SortablePaginatableAddressableCollection, PaginatableAddressableCollection
 from .files import File, BaseFileCollection
 from .jobs import Job
-from .pricing import Price, TotalPrice, DP2
+from .pricing import Charge, Price, TotalPrice, DP2
 
 
 class ProjectCollection(SortablePaginatableAddressableCollection):
@@ -54,6 +54,7 @@ class Project(object):
         self.created = created
         self.callback_url = callback_url
 
+        self.charges = ProjectChargeCollection(project=self, per_page=client.per_page)
         self.files = ProjectFileCollection(project=self, per_page=client.per_page)
         self.jobs = ProjectJobCollection(project=self, per_page=client.per_page)
 
@@ -239,3 +240,24 @@ class ProjectJobCollection(PaginatableAddressableCollection):
             data=data,
         )
         return self.make_item(**response)
+
+
+class ProjectChargeCollection(PaginatableAddressableCollection):
+    def __init__(self, project, *args, **kwargs):
+        self.project = project
+        client = kwargs.pop('client', project.client)
+        super(ProjectChargeCollection, self).__init__(client=client, *args, **kwargs)
+
+    @property
+    def url_path(self):
+        return '{}/charges'.format(self.project.url_path)
+
+    def clone(self):
+        return super(ProjectChargeCollection, self).clone(project=self.project)
+
+    def make_item(self, **kwargs):
+        return Charge(
+            collection=self,
+            title=kwargs['title'],
+            value=kwargs['value'],
+        )

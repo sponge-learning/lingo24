@@ -8,7 +8,7 @@ from lingo24.business_documents import Authenticator, Client
 from lingo24.business_documents.domains import Domain
 from lingo24.business_documents.files import File
 from lingo24.business_documents.jobs import Job
-from lingo24.business_documents.pricing import Price, TotalPrice
+from lingo24.business_documents.pricing import Charge, Price, TotalPrice
 from lingo24.business_documents.projects import Project, ProjectCollection
 from lingo24.exceptions import APIError, DoesNotExist, InvalidState
 
@@ -474,6 +474,254 @@ class ProjectCollectionDataTestCase(BaseTestCase):
     def test_get_page_non_existant(self, m):
         self.setup_data(m)
         it = iter(self.client.projects.get_page(10))
+        self.assertRaises(StopIteration, it.next)
+
+
+class ProjectChargeCollectionBasicTestCase(BaseTestCase):
+    def setUp(self):
+        authenticator = Authenticator('xxx', 'yyy', 'https://www.example.com/callback')
+        authenticator.store.set({'access_token': 'aaa'})
+        self.client = Client(authenticator, 'demo', per_page=4)
+        self.project = Project(self.client, 1, 'aaa', 123, 'bbb', datetime.datetime.utcfromtimestamp(123), 'ccc')
+
+    def test_make_item(self):
+        charge = self.project.charges.make_item(
+            title='xxx',
+            value=123,
+            )
+        self.assertEqual(charge, Charge(self.project.charges, 'xxx', 123))
+
+    def test_equality(self):
+        self.assertEqual(self.project.charges, self.project.charges)
+
+    def test_clone(self):
+        charges = self.project.charges
+        clone = charges.clone()
+        self.assertEqual(charges, clone)
+        self.assertIsNot(charges, clone)
+
+
+class ProjectChargeCollectionEmptyTestCase(BaseTestCase):
+    def setUp(self):
+        authenticator = Authenticator('xxx', 'yyy', 'https://www.example.com/callback')
+        authenticator.store.set({'access_token': 'aaa'})
+        self.client = Client(authenticator, 'demo', per_page=4)
+        self.project = Project(self.client, 1, 'aaa', 123, 'bbb', datetime.datetime.utcfromtimestamp(123), 'ccc')
+
+    @staticmethod
+    def setup_data(m):
+        m.get('https://api-demo.lingo24.com/docs/v1/projects/1/charges?page=0&size=4', text=json.dumps({
+            'content': [],
+            'page': {
+                'size': 0,
+                'totalElements': 0,
+                'totalPages': 0,
+                'number': 0,
+            }
+        }))
+        m.get('https://api-demo.lingo24.com/docs/v1/projects/1/charges?page=1&size=4', status_code=404)
+
+    @requests_mock.mock()
+    def test_page_count(self, m):
+        self.setup_data(m)
+        self.assertEqual(self.project.charges.page_count, 0)
+
+    @requests_mock.mock()
+    def test_len(self, m):
+        self.setup_data(m)
+        self.assertEqual(len(self.project.charges), 0)
+
+    @requests_mock.mock()
+    def test_iteration(self, m):
+        self.setup_data(m)
+        it = iter(self.project.charges)
+        self.assertRaises(StopIteration, it.next)
+
+    @requests_mock.mock()
+    def test_iteration_error(self, m):
+        m.get('https://api-demo.lingo24.com/docs/v1/projects/1/charges?page=0&size=4', status_code=500)
+        it = iter(self.project.charges)
+        self.assertRaises(APIError, it.next)
+
+    @requests_mock.mock()
+    def test_indexing(self, m):
+        self.setup_data(m)
+        self.assertRaises(IndexError, lambda i: self.project.charges[i], -1)
+        self.assertRaises(IndexError, lambda i: self.project.charges[i], 0)
+        self.assertRaises(TypeError, lambda i: self.project.charges[i], 'xxx')
+
+    @requests_mock.mock()
+    def test_slice_start(self, m):
+        self.setup_data(m)
+        it = iter(self.project.charges[:5])
+        self.assertRaises(StopIteration, it.next)
+
+    @requests_mock.mock()
+    def test_slice_middle(self, m):
+        self.setup_data(m)
+        it = iter(self.project.charges[2:9])
+        self.assertRaises(StopIteration, it.next)
+
+    @requests_mock.mock()
+    def test_slice_end(self, m):
+        self.setup_data(m)
+        it = iter(self.project.charges[7:])
+        self.assertRaises(StopIteration, it.next)
+
+    @requests_mock.mock()
+    def test_slice_step(self, m):
+        self.setup_data(m)
+        it = iter(self.project.charges[2:9:2])
+        self.assertRaises(StopIteration, it.next)
+
+
+class ProjectChargeCollectionDataTestCase(BaseTestCase):
+    def setUp(self):
+        authenticator = Authenticator('xxx', 'yyy', 'https://www.example.com/callback')
+        authenticator.store.set({'access_token': 'aaa'})
+        self.client = Client(authenticator, 'demo', per_page=4)
+        self.project = Project(self.client, 1, 'aaa', 123, 'bbb', datetime.datetime.utcfromtimestamp(123), 'ccc')
+
+    @staticmethod
+    def setup_data(m):
+        m.get('https://api-demo.lingo24.com/docs/v1/projects/1/charges?page=0&size=4', text=json.dumps({
+            'links': [
+                {'rel': 'next', 'href': 'https://api-demo.lingo24.com/docs/v1/projects/1/charges?page=1&size=4'},
+            ],
+            'content': [
+                {'title': 'Charge 1', 'value': 111},
+                {'title': 'Charge 2', 'value': 222},
+                {'title': 'Charge 3', 'value': 333},
+                {'title': 'Charge 4', 'value': 444},
+            ],
+            'page': {
+                'size': 4,
+                'totalElements': 10,
+                'totalPages': 3,
+                'number': 0,
+            }
+        }))
+        m.get('https://api-demo.lingo24.com/docs/v1/projects/1/charges?page=1&size=4', text=json.dumps({
+            'links': [
+                {'rel': 'next', 'href': 'https://api-demo.lingo24.com/docs/v1/projects/1/charges?page=2&size=4'},
+            ],
+            'content': [
+                {'title': 'Charge 5', 'value': 555},
+                {'title': 'Charge 6', 'value': 666},
+                {'title': 'Charge 7', 'value': 777},
+                {'title': 'Charge 8', 'value': 888},
+            ],
+            'page': {
+                'size': 4,
+                'totalElements': 10,
+                'totalPages': 3,
+                'number': 1,
+            }
+        }))
+        m.get('https://api-demo.lingo24.com/docs/v1/projects/1/charges?page=2&size=4', text=json.dumps({
+            'content': [
+                {'title': 'Charge 9', 'value': 999},
+                {'title': 'Charge 10', 'value': 101010},
+            ],
+            'page': {
+                'size': 2,
+                'totalElements': 10,
+                'totalPages': 3,
+                'number': 2,
+            }
+        }))
+        m.get('https://api-demo.lingo24.com/docs/v1/projects/1/charges?page=10&size=4', status_code=404)
+
+    @requests_mock.mock()
+    def test_page_count(self, m):
+        self.setup_data(m)
+        self.assertEqual(self.project.charges.page_count, 3)
+
+    @requests_mock.mock()
+    def test_len(self, m):
+        self.setup_data(m)
+        self.assertEqual(len(self.project.charges), 10)
+
+    @requests_mock.mock()
+    def test_iteration(self, m):
+        self.setup_data(m)
+        it = iter(self.project.charges)
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 1', 111))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 2', 222))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 3', 333))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 4', 444))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 5', 555))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 6', 666))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 7', 777))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 8', 888))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 9', 999))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 10', 101010))
+        self.assertRaises(StopIteration, it.next)
+
+    @requests_mock.mock()
+    def test_indexing(self, m):
+        self.setup_data(m)
+        self.assertRaises(IndexError, lambda i: self.project.charges[i], -1)
+        self.assertRaises(IndexError, lambda i: self.project.charges[i], 10)
+        self.assertEqual(self.project.charges[5], Charge(self.project.charges, 'Charge 6', 666))
+
+    @requests_mock.mock()
+    def test_slice_start(self, m):
+        self.setup_data(m)
+        it = iter(self.project.charges[:5])
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 1', 111))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 2', 222))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 3', 333))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 4', 444))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 5', 555))
+        self.assertRaises(StopIteration, it.next)
+
+    @requests_mock.mock()
+    def test_slice_middle(self, m):
+        self.setup_data(m)
+        it = iter(self.project.charges[2:9])
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 3', 333))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 4', 444))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 5', 555))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 6', 666))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 7', 777))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 8', 888))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 9', 999))
+        self.assertRaises(StopIteration, it.next)
+
+    @requests_mock.mock()
+    def test_slice_end(self, m):
+        self.setup_data(m)
+        it = iter(self.project.charges[7:])
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 8', 888))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 9', 999))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 10', 101010))
+        self.assertRaises(StopIteration, it.next)
+
+    @requests_mock.mock()
+    def test_slice_step(self, m):
+        self.setup_data(m)
+        it = iter(self.project.charges[2:9:2])
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 3', 333))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 5', 555))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 7', 777))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 9', 999))
+        self.assertRaises(StopIteration, it.next)
+
+    @requests_mock.mock()
+    def test_get_page(self, m):
+        self.setup_data(m)
+        it = iter(self.project.charges.get_page(1))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 5', 555))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 6', 666))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 7', 777))
+        self.assertEqual(it.next(), Charge(self.project.charges, 'Charge 8', 888))
+        self.assertRaises(StopIteration, it.next)
+
+    @requests_mock.mock()
+    def test_get_page_non_existant(self, m):
+        self.setup_data(m)
+        it = iter(self.project.charges.get_page(10))
         self.assertRaises(StopIteration, it.next)
 
 

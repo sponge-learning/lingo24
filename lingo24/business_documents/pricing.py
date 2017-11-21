@@ -91,3 +91,23 @@ class TotalPrice(object):
             total_with_discount=(self.total_with_discount + other.total_with_discount),
             total_without_discount=(self.total_without_discount + other.total_without_discount),
         )
+
+
+class Charge(object):
+    def __init__(self, collection, title, value):
+        self.collection = collection
+        self.title = title
+        self.value = value
+
+    def __repr__(self):
+        return '<Charge {}: {}>'.format(self.title, self.value)
+
+    def __eq__(self, other):
+        return all((
+            self.collection == other.collection,
+            self.title == other.title,
+            self.value == other.value,
+            ))
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
