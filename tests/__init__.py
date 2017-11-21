@@ -4,5 +4,6 @@ from .domains import *
 from .files import *
 from .jobs import *
 from .locales import *
+from .pricing import *
 from .projects import *
 from .services import *

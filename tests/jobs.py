@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import datetime
 import json
 from decimal import Decimal
@@ -7,8 +6,9 @@ import requests_mock
 
 from lingo24.business_documents import Authenticator, Client
 from lingo24.business_documents.files import File
-from lingo24.business_documents.jobs import Job, JobPrice, Price, Metric
+from lingo24.business_documents.jobs import Job, Metric
 from lingo24.business_documents.locales import Locale
+from lingo24.business_documents.pricing import TotalPrice, Price
 from lingo24.business_documents.projects import Project
 from lingo24.business_documents.services import Service
 from lingo24.exceptions import APIError, DoesNotExist
@@ -133,7 +133,7 @@ class JobTestCase(BaseTestCase):
             'totalWVatWoDiscount': '44.44',
         }))
         job = Job(self.project.jobs, 123, 'aaa', 2, 3, 4, 5, 6)
-        self.assertEqual(job.price, JobPrice(
+        self.assertEqual(job.price, TotalPrice(
             total_with_discount=Price('GBP', Decimal('11.11'), Decimal('22.22')),
             total_without_discount=Price('GBP', Decimal('33.33'), Decimal('44.44')),
         ))
@@ -189,52 +189,6 @@ class JobTestCase(BaseTestCase):
         m.delete('https://api-demo.lingo24.com/docs/v1/projects/1/jobs/123', status_code=500)
         job = Job(self.project.jobs, 123, 'aaa', 2, 3, 4, 5, 6)
         self.assertRaises(APIError, job.delete)
-
-
-class JobPriceTestCase(BaseTestCase):
-    def test_equality(self):
-        self.assertEqual(
-            JobPrice(Price('GBP', 111, 222), Price('GBP', 333, 444)),
-            JobPrice(Price('GBP', 111, 222), Price('GBP', 333, 444)),
-        )
-        self.assertNotEqual(
-            JobPrice(Price('GBP', 111, 222), Price('GBP', 333, 444)),
-            JobPrice(Price('USD', 111, 222), Price('GBP', 333, 444)),
-        )
-        self.assertNotEqual(
-            JobPrice(Price('GBP', 111, 222), Price('GBP', 333, 444)),
-            JobPrice(Price('GBP', 111, 222), Price('USD', 333, 444)),
-        )
-
-
-class PriceTestCase(BaseTestCase):
-    def test_equality(self):
-        self.assertEqual(Price('GBP', 123, 456), Price('GBP', 123, 456))
-        self.assertNotEqual(Price('GBP', 123, 456), Price('USD', 123, 456))
-        self.assertNotEqual(Price('GBP', 123, 456), Price('GBP', 111, 456))
-        self.assertNotEqual(Price('GBP', 123, 456), Price('GBP', 123, 111))
-
-    def test_tax(self):
-        price = Price('GBP', 123, 456)
-        self.assertEqual(price.tax, 333)
-
-    def test_formatted_net(self):
-        self.assertEqual(Price('GBP', 123, 456).formatted_net, u'£123')
-        self.assertEqual(Price('EUR', 123, 456).formatted_net, u'€123')
-        self.assertEqual(Price('USD', 123, 456).formatted_net, u'$123')
-        self.assertEqual(Price('AUD', 123, 456).formatted_net, u'AUD 123')
-
-    def test_formatted_gross(self):
-        self.assertEqual(Price('GBP', 123, 456).formatted_gross, u'£456')
-        self.assertEqual(Price('EUR', 123, 456).formatted_gross, u'€456')
-        self.assertEqual(Price('USD', 123, 456).formatted_gross, u'$456')
-        self.assertEqual(Price('AUD', 123, 456).formatted_gross, u'AUD 456')
-
-    def test_formatted_tax(self):
-        self.assertEqual(Price('GBP', 123, 456).formatted_tax, u'£333')
-        self.assertEqual(Price('EUR', 123, 456).formatted_tax, u'€333')
-        self.assertEqual(Price('USD', 123, 456).formatted_tax, u'$333')
-        self.assertEqual(Price('AUD', 123, 456).formatted_tax, u'AUD 333')
 
 
 class MetricTestCase(BaseTestCase):
