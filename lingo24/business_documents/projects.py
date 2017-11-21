@@ -1,5 +1,6 @@
 import datetime
 import json
+from decimal import Decimal
 
 import requests
 
@@ -7,6 +8,7 @@ from ..exceptions import APIError, InvalidState, reraise
 from .collections import SortablePaginatableAddressableCollection, PaginatableAddressableCollection
 from .files import File, BaseFileCollection
 from .jobs import Job
+from .pricing import Price, TotalPrice, DP2
 
 
 class ProjectCollection(SortablePaginatableAddressableCollection):
@@ -81,6 +83,33 @@ class Project(object):
         if self.domain_id is None:
             return None
         return self.client.domains.get(self.domain_id)
+
+    @property
+    def price(self):
+        """
+        Return the TotalPrice for this Project, or None if no pricing
+        information is available.
+        """
+        path = '{}/price'.format(self.url_path)
+        try:
+            response = self.client.api_get_json(path)
+        except requests.RequestException as exc:
+            if exc.response.status_code == 404:
+                return None
+            else:
+                reraise(APIError)
+        return TotalPrice(
+            total_with_discount=Price(
+                currency_code=response['currencyCode'],
+                net=Decimal(str(response['totalWoVatWDiscount'])).quantize(DP2),
+                gross=Decimal(str(response['totalWVatWDiscount'])).quantize(DP2),
+            ),
+            total_without_discount=Price(
+                currency_code=response['currencyCode'],
+                net=Decimal(str(response['totalWoVatWoDiscount'])).quantize(DP2),
+                gross=Decimal(str(response['totalWVatWoDiscount'])).quantize(DP2),
+            ),
+        )
 
     def refresh(self):
         updated = self.client.projects.get(self.id)

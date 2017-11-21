@@ -1,5 +1,6 @@
 import datetime
 import json
+from decimal import Decimal
 
 import requests_mock
 
@@ -7,6 +8,7 @@ from lingo24.business_documents import Authenticator, Client
 from lingo24.business_documents.domains import Domain
 from lingo24.business_documents.files import File
 from lingo24.business_documents.jobs import Job
+from lingo24.business_documents.pricing import Price, TotalPrice
 from lingo24.business_documents.projects import Project, ProjectCollection
 from lingo24.exceptions import APIError, DoesNotExist, InvalidState
 
@@ -45,6 +47,33 @@ class ProjectTestCase(BaseTestCase):
     def test_url_path(self):
         project = Project(self.client, 1, 'aaa', 123, 'bbb', datetime.datetime.utcfromtimestamp(123), 'ccc')
         self.assertEqual('projects/1', project.url_path)
+
+    @requests_mock.mock()
+    def test_price(self, m):
+        m.get('https://api-demo.lingo24.com/docs/v1/projects/1/price', text=json.dumps({
+            'currencyCode': 'GBP',
+            'totalWoVatWDiscount': '11.11',
+            'totalWVatWDiscount': '22.22',
+            'totalWoVatWoDiscount': '33.33',
+            'totalWVatWoDiscount': '44.44',
+        }))
+        project = Project(self.client, 1, 'aaa', 123, 'bbb', datetime.datetime.utcfromtimestamp(123), 'ccc')
+        self.assertEqual(project.price, TotalPrice(
+            total_with_discount=Price('GBP', Decimal('11.11'), Decimal('22.22')),
+            total_without_discount=Price('GBP', Decimal('33.33'), Decimal('44.44')),
+        ))
+
+    @requests_mock.mock()
+    def test_price_missing(self, m):
+        m.get('https://api-demo.lingo24.com/docs/v1/projects/1/price', status_code=404)
+        project = Project(self.client, 1, 'aaa', 123, 'bbb', datetime.datetime.utcfromtimestamp(123), 'ccc')
+        self.assertIsNone(project.price)
+
+    @requests_mock.mock()
+    def test_price_error(self, m):
+        m.get('https://api-demo.lingo24.com/docs/v1/projects/1/price', status_code=500)
+        project = Project(self.client, 1, 'aaa', 123, 'bbb', datetime.datetime.utcfromtimestamp(123), 'ccc')
+        self.assertRaises(APIError, lambda: project.price)
 
     @requests_mock.mock()
     def test_refresh(self, m):
