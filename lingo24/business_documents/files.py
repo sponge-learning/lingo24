@@ -3,10 +3,10 @@ import json
 import requests
 
 from ..exceptions import APIError, reraise
-from .collections import BaseCollection
+from .collections import AddressableCollection
 
 
-class BaseFileCollection(BaseCollection):
+class BaseFileCollection(AddressableCollection):
     def make_item(self, **kwargs):
         return File(
             client=self.client,

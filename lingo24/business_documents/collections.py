@@ -30,14 +30,18 @@ class BaseCollection(object):
     def _fetch(self, path):
         return self.client.api_get_json(path)
 
+    def clone(self, *args, **kwargs):
+        return self.__class__(client=self.client, *args, **kwargs)
+
+
+class AddressableCollection(BaseCollection):
+    __metaclass__ = ABCMeta
+
     def item_url_path(self, item_id):
         url_path = self.url_path
         if not url_path.endswith('/'):
             url_path += '/'
         return '{}{:d}'.format(url_path, item_id)
-
-    def clone(self, *args, **kwargs):
-        return self.__class__(client=self.client, *args, **kwargs)
 
     def get(self, item_id):
         path = self.item_url_path(item_id)
@@ -184,16 +188,20 @@ class PaginatableCollection(BaseCollection):
         raise DoesNotExist
 
 
-class SortablePaginatableCollection(PaginatableCollection):
+class PaginatableAddressableCollection(AddressableCollection, PaginatableCollection):
+    __metaclass__ = ABCMeta
+
+
+class SortablePaginatableAddressableCollection(PaginatableAddressableCollection):
     __metaclass__ = ABCMeta
 
     def __init__(self, *args, **kwargs):
         self.sort_by = kwargs.pop('sort_by', None)
-        super(SortablePaginatableCollection, self).__init__(*args, **kwargs)
+        super(SortablePaginatableAddressableCollection, self).__init__(*args, **kwargs)
 
     def __eq__(self, other):
         return all((
-            super(SortablePaginatableCollection, self).__eq__(other),
+            super(SortablePaginatableAddressableCollection, self).__eq__(other),
             self.sort_by == other.sort_by,
             ))
 
@@ -207,7 +215,7 @@ class SortablePaginatableCollection(PaginatableCollection):
 
 
     def make_query_dict(self, **kwargs):
-        query_dict = super(SortablePaginatableCollection, self).make_query_dict(**kwargs)
+        query_dict = super(SortablePaginatableAddressableCollection, self).make_query_dict(**kwargs)
         if self.sort_by:
             query_dict.update({
                 'sort': self.sort_by,
@@ -215,7 +223,7 @@ class SortablePaginatableCollection(PaginatableCollection):
         return query_dict
 
     def clone(self, *args, **kwargs):
-        return super(SortablePaginatableCollection, self).clone(
+        return super(SortablePaginatableAddressableCollection, self).clone(
             sort_by=self.sort_by,
             *args,
             **kwargs

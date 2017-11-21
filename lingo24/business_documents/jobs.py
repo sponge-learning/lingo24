@@ -4,7 +4,7 @@ from decimal import Decimal
 import requests
 
 from ..exceptions import APIError, reraise
-from .collections import PaginatableCollection
+from .collections import PaginatableAddressableCollection
 from .files import File, BaseFileCollection
 
 DP2 = Decimal('0.00') # 2 decimal places
@@ -265,7 +265,7 @@ class Metric(object):
         ))
 
 
-class JobFileCollection(BaseFileCollection, PaginatableCollection):
+class JobFileCollection(BaseFileCollection, PaginatableAddressableCollection):
     def __init__(self, job, *args, **kwargs):
         self.job = job
         client = kwargs.pop('client', job.client)

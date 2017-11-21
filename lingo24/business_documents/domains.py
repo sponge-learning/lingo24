@@ -1,7 +1,7 @@
-from .collections import SortablePaginatableCollection
+from .collections import SortablePaginatableAddressableCollection
 
 
-class DomainCollection(SortablePaginatableCollection):
+class DomainCollection(SortablePaginatableAddressableCollection):
     url_path = 'domains/'
 
     def make_item(self, **kwargs):

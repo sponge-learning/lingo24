@@ -1,7 +1,7 @@
-from .collections import SortablePaginatableCollection
+from .collections import SortablePaginatableAddressableCollection
 
 
-class LocaleCollection(SortablePaginatableCollection):
+class LocaleCollection(SortablePaginatableAddressableCollection):
     url_path = 'locales/'
 
     def make_item(self, **kwargs):

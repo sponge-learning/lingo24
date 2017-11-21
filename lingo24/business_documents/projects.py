@@ -4,12 +4,12 @@ import json
 import requests
 
 from ..exceptions import APIError, InvalidState, reraise
-from .collections import SortablePaginatableCollection, PaginatableCollection
+from .collections import SortablePaginatableAddressableCollection, PaginatableAddressableCollection
 from .files import File, BaseFileCollection
 from .jobs import Job
 
 
-class ProjectCollection(SortablePaginatableCollection):
+class ProjectCollection(SortablePaginatableAddressableCollection):
     url_path = 'projects/'
 
     def make_item(self, **kwargs):
@@ -130,7 +130,7 @@ class Project(object):
         self.status = 'IN_PROGRESS'
 
 
-class ProjectFileCollection(BaseFileCollection, PaginatableCollection):
+class ProjectFileCollection(BaseFileCollection, PaginatableAddressableCollection):
     def __init__(self, project, *args, **kwargs):
         self.project = project
         client = kwargs.pop('client', project.client)
@@ -172,7 +172,7 @@ class ProjectFileCollection(BaseFileCollection, PaginatableCollection):
             reraise(APIError)
 
 
-class ProjectJobCollection(PaginatableCollection):
+class ProjectJobCollection(PaginatableAddressableCollection):
     def __init__(self, project, *args, **kwargs):
         self.project = project
         client = kwargs.pop('client', project.client)
