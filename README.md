@@ -141,7 +141,7 @@ and metrics available:
 >>> job.status
 'QUOTED'
 >>> job.price
-<JobPrice: Without discount <Price GBP 123.45 net / 678.90 gross> | With discount <Price GBP 123.45 net / 678.90 gross>>
+<TotalPrice: Without discount <Price GBP 123.45 net / 678.90 gross> | With discount <Price GBP 123.45 net / 678.90 gross>>
 >>> import pprint
 >>> pprint.pprint(job.metrics)
 {'FUZZY_MATCH_75_84': <Metric: White spaces 0 | Segments 0 | Words 0 | Characters 0>,
