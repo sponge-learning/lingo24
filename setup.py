@@ -1,14 +1,16 @@
-from setuptools import setup
+from setuptools import find_packages, setup
 
 
 setup(
     name='lingo24',
-    version='0.1dev',
+    description='Client library for the Lingo24 translation API',
+    version='0.1dev4',
     url='https://github.com/boltlearning/lingo24',
     author='Bolt Learning',
     author_email='info@boltlearning.com',
     packages=[
         'lingo24',
+        'lingo24.business_documents',
     ],
     install_requires=[
         'requests>=2.18',
