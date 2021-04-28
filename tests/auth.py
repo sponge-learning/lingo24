@@ -29,6 +29,9 @@ class AuthenticatorTestCase(BaseTestCase):
         demo_authenticator = Authenticator('xxx', 'yyy', 'https://www.example.com/callback', endpoint='demo')
         self.assertURLEqual(demo_authenticator.ease_endpoint_url, 'https://ease-demo.lingo24.com/')
 
+        custom_authenticator = Authenticator('xxx', 'yyy', 'https://www.example.com/callback', endpoint='https://www.example.com/')
+        self.assertURLEqual(custom_authenticator.ease_endpoint_url, 'https://www.example.com/')
+
     def test_api_endpoint_url(self):
         default_authenticator = Authenticator('xxx', 'yyy', 'https://www.example.com/callback')
         self.assertURLEqual(default_authenticator.api_endpoint_url, 'https://api.lingo24.com/docs/v1/')
@@ -38,6 +41,9 @@ class AuthenticatorTestCase(BaseTestCase):
 
         demo_authenticator = Authenticator('xxx', 'yyy', 'https://www.example.com/callback', endpoint='demo')
         self.assertURLEqual(demo_authenticator.api_endpoint_url, 'https://api-demo.lingo24.com/docs/v1/')
+
+        custom_authenticator = Authenticator('xxx', 'yyy', 'https://www.example.com/callback', endpoint='https://www.example.com/')
+        self.assertURLEqual(custom_authenticator.api_endpoint_url, 'https://www.example.com/')
 
     def test_authorization_url(self):
         authenticator = Authenticator('xxx', 'yyy', 'https://www.example.com/callback')

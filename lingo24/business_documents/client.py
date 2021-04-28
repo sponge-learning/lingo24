@@ -20,7 +20,9 @@ class Client(object):
 
     @property
     def api_endpoint_url(self):
-        return API_ENDPOINT_URLS[self.endpoint]
+        if self.endpoint in ('live', 'demo'):
+            return API_ENDPOINT_URLS[self.endpoint]
+        return self.endpoint.rstrip('/') + '/'
 
     @property
     def status(self):
