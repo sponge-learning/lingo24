@@ -39,6 +39,7 @@ class Authenticator(object):
         self.client_secret = client_secret
         self.redirect_url = redirect_url
         self.endpoint = endpoint
+        self.ease_endpoint = ease_endpoint
         if store is None:
             store = DictAuthenticationStore()
         self.store = store
