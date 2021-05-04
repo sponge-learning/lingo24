@@ -12,7 +12,7 @@ from .projects import ProjectCollection
 
 
 class Client(object):
-    def __init__(self, authenticator, endpoint='live', per_page=25):
+    def __init__(self, authenticator, endpoint='live', per_page=25, endpoints=API_ENDPOINT_URLS):
         self.authenticator = authenticator
         self.endpoint = endpoint
         self.per_page = per_page
@@ -20,9 +20,7 @@ class Client(object):
 
     @property
     def api_endpoint_url(self):
-        if self.endpoint in ('live', 'demo'):
-            return API_ENDPOINT_URLS[self.endpoint]
-        return self.endpoint.rstrip('/') + '/'
+        return self.endpoints[self.endpoint].rstrip('/') + '/'
 
     @property
     def status(self):
