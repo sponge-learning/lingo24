@@ -133,7 +133,7 @@ class Project(object):
         self.status = 'PENDING'
 
     def cancel(self):
-        if self.status not in ('CREATED', 'PENDING', 'QUOTED'):
+        if self.status not in ('CREATED', 'QUOTED'):
             raise InvalidState(
                 'Cannot cancel a project with status {}'.format(self.status)
             )

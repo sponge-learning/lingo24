@@ -4,6 +4,12 @@ Lingo24 Client
 This client library provides access to the Lingo24 translation *Business
 Documents* API.
 
+## Installation
+
+```bash
+$ pip install lingo24
+```
+
 
 ## Usage
 
