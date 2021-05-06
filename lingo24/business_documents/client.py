@@ -12,15 +12,19 @@ from .projects import ProjectCollection
 
 
 class Client(object):
-    def __init__(self, authenticator, endpoint='live', per_page=25):
+    def __init__(self, authenticator, endpoint='live', per_page=25, endpoint_url=None):
         self.authenticator = authenticator
-        self.endpoint = endpoint
         self.per_page = per_page
         self._api_session = None
+        # endpoint_url takes precedence
+        if endpoint_url:
+            self.endpoint_url = endpoint_url
+        else:
+            self.endpoint_url = API_ENDPOINT_URLS[endpoint]
 
     @property
     def api_endpoint_url(self):
-        return API_ENDPOINT_URLS[self.endpoint]
+        return self.endpoint_url.rstrip('/') + '/'
 
     @property
     def status(self):

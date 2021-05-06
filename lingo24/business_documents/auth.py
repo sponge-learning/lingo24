@@ -34,22 +34,29 @@ class DictAuthenticationStore(AuthenticationStore):
 
 
 class Authenticator(object):
-    def __init__(self, client_id, client_secret, redirect_url, store=None, endpoint='live'):
+    def __init__(self, client_id, client_secret, redirect_url, store=None, endpoint='live', endpoint_urls=None):
         self.client_id = client_id
         self.client_secret = client_secret
         self.redirect_url = redirect_url
-        self.endpoint = endpoint
         if store is None:
             store = DictAuthenticationStore()
         self.store = store
+        # endpoint_urls takes precedence
+        if endpoint_urls:
+            self.endpoint_urls = endpoint_urls
+        else:
+            self.endpoint_urls = {
+                'api': API_ENDPOINT_URLS[endpoint],
+                'ease': EASE_ENDPOINT_URLS[endpoint],
+            }
 
     @property
     def ease_endpoint_url(self):
-        return EASE_ENDPOINT_URLS[self.endpoint]
+        return self.endpoint_urls['ease'].rstrip('/') + '/'
 
     @property
     def api_endpoint_url(self):
-        return API_ENDPOINT_URLS[self.endpoint]
+        return self.endpoint_urls['api'].rstrip('/') + '/'
 
     @property
     def authorization_url(self):
